@@ -567,16 +567,18 @@ public class InstanceServerCertProvider implements InstanceProvider {
         // b) one of the prefix components must be the <service> name
 
         List<String> hostNameSuffixList = new ArrayList<>();
-//        final String dashDomain = domain.replace('.', '-');
 
-        String[] subDomainPortionList = domain.split("\\.");
-        Collections.reverse(Arrays.asList(subDomainPortionList));
-        StringJoiner reversedSubDomain = new StringJoiner(".");
-        for (String subDomainPortion : subDomainPortionList) {
-        	reversedSubDomain.add(subDomainPortion);
+//        final String dashDomain = domain.replace('.', '-');
+        String[] domainPortionList = domain.split("\\.");
+        Collections.reverse(Arrays.asList(domainPortionList));
+        StringJoiner reversedDomain = new StringJoiner(".");
+        for (String domainPortion : domainPortionList) {
+        	reversedDomain.add(domainPortion);
         }
+
         for (String dnsSuffix : dnsSuffixes) {
-            hostNameSuffixList.add("." + reversedSubDomain + "." + dnsSuffix);
+//            hostNameSuffixList.add("." + dashDomain + "." + dnsSuffix);
+            hostNameSuffixList.add("." + reversedDomain + "." + dnsSuffix);
         }
 
         // generate our cluster based names if we have clusters configured
@@ -586,7 +588,8 @@ public class InstanceServerCertProvider implements InstanceProvider {
             clusterNameSet = new HashSet<>();
             for (String clusterName : k8sClusterNames) {
                 for (String dnsSuffix : dnsSuffixes) {
-                    clusterNameSet.add(service + "." + reversedSubDomain + "." + clusterName + "." + dnsSuffix);
+//                    clusterNameSet.add(service + "." + dashDomain + "." + clusterName + "." + dnsSuffix);
+                    clusterNameSet.add(service + "." + reversedDomain + "." + clusterName + "." + dnsSuffix);
                 }
             }
         }
@@ -599,7 +602,7 @@ public class InstanceServerCertProvider implements InstanceProvider {
                 LOGGER.error("InstanceUtils.validateSanDnsName() failed with " +
                         "domain: {}, reversedSubDomain: {}, service: {}, hostname: {}, " +
                         "hostNameSuffixList: {}, k8sDnsSuffixes: {}, clusterNameSet: {}",
-                        domain, reversedSubDomain, service, hostname, hostNameSuffixList, k8sDnsSuffixes, clusterNameSet);
+                        domain, reversedDomain, service, hostname, hostNameSuffixList, k8sDnsSuffixes, clusterNameSet);
                 return false;
             }
         }
