@@ -1,6 +1,7 @@
 package com.yahoo.athenz.auth.impl;
 
 import com.yahoo.athenz.auth.token.OAuth2Token;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.util.Collections;
@@ -11,9 +12,35 @@ import static org.testng.Assert.assertNull;
 
 public class EmailTokenExchangeIdentityProviderTest {
 
+    @AfterMethod
+    public void cleanup() {
+        System.clearProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN);
+    }
+
     @Test
-    public void testGetTokenIdentityMapsEmailClaim() {
+    public void testGetTokenIdentityMapsEmailClaimToDefaultDomain() {
         OAuth2Token token = new TestOAuth2Token("audience", Map.of("email", " Athenz_User@ATHENZ.IO "));
+
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getTokenIdentity(token), "email:ext.athenz_user@athenz.io");
+    }
+
+    @Test
+    public void testGetTokenIdentityMapsEmailClaimToConfiguredDomain() {
+        System.setProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN,
+                " Keycloak ");
+        OAuth2Token token = new TestOAuth2Token("audience", Map.of("email", " Athenz_User@ATHENZ.IO "));
+
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getTokenIdentity(token), "keycloak:ext.athenz_user@athenz.io");
+    }
+
+    @Test
+    public void testGetTokenIdentityUsesDefaultDomainWithBlankConfiguredDomain() {
+        System.setProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN, "  ");
+        OAuth2Token token = new TestOAuth2Token("audience", Map.of("email", "athenz_user@athenz.io"));
 
         EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
 
@@ -66,6 +93,13 @@ public class EmailTokenExchangeIdentityProviderTest {
         EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
 
         assertEquals(provider.getTokenExchangeClaims(), Collections.singletonList("email"));
+    }
+
+    @Test
+    public void testGetExternalDomainReturnsDefaultDomain() {
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getExternalDomain(), "email");
     }
 
     private static class TestOAuth2Token extends OAuth2Token {

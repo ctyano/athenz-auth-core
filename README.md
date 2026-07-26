@@ -60,6 +60,16 @@ When JWT `email` claim values are registered as Athenz role members, configure `
 | athenz.auth.external_member.email.allowed_domains | | Comma-separated default allowlist of email domains. Use exact domains such as `example.com`; `*.example.com` allows subdomains only. |
 | athenz.auth.external_member.email.allowed_domains.\<athenz-domain\> | | Domain-specific allowlist. When set, it overrides the default allowlist for that Athenz domain. |
 
+### EmailTokenExchangeIdentityProvider
+
+Configure ZTS OAuth provider entries with `com.yahoo.athenz.auth.impl.EmailTokenExchangeIdentityProvider` to map an external token `email` claim to an Athenz external principal.
+
+By default, `athenz_user@example.com` maps to `email:ext.athenz_user@example.com`. Set `athenz.auth.token_exchange.email.domain` to use a different external member domain, such as `keycloak:ext.athenz_user@example.com`.
+
+| Property | Default | Description |
+| --- | --- | --- |
+| athenz.auth.token_exchange.email.domain | email | Athenz external member domain prefix used when converting the token `email` claim to `<domain>:ext.<email>`. |
+
 ### UserCertificateProvider
 
 | Property | Default | Description |
