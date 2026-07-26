@@ -1,4 +1,4 @@
-FROM docker.io/library/maven:3-eclipse-temurin-19-focal AS builder
+FROM docker.io/library/maven:3.9.16-eclipse-temurin-17-noble AS builder
 
 ARG VERSION=
 ARG ATHENZ_VERSION=
@@ -21,15 +21,23 @@ LABEL org.opencontainers.image.source="https://github.com/AthenZ/athenz"
 
 COPY . .
 
-RUN curl -s https://webi.sh/yq | sh && $HOME/.local/bin/yq -v
+RUN curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$(dpkg --print-architecture) \
+      && chmod +x /usr/local/bin/yq \
+      && yq --version
+
+RUN test -n "$ATHENZ_VERSION" || (echo "ATHENZ_VERSION build arg is required" >&2; exit 1)
 
 RUN cat template/pom.xml \
-      | $HOME/.local/bin/yq -p xml -o xml ".project.version=strenv(VERSION)" \
-      | $HOME/.local/bin/yq -p xml -o xml ".project.properties.\"athenz.version\"=strenv(ATHENZ_VERSION)" \
-      | $HOME/.local/bin/yq -p xml -o xml ".project.properties.\"java.version\"=strenv(JAVA_VERSION)" \
+      | yq -p xml -o xml ".project.version=strenv(VERSION)" \
+      | yq -p xml -o xml ".project.properties.\"athenz.version\"=strenv(ATHENZ_VERSION)" \
+      | yq -p xml -o xml ".project.properties.\"java.version\"=strenv(JAVA_VERSION)" \
       | tee pom.xml
 
-ENV MAVEN_CONFIG=$HOME/.m2
+ENV MAVEN_CONFIG=/root/.m2
+
+RUN printf "" | openssl s_client -showcerts -connect repo.maven.apache.org:443 -servername repo.maven.apache.org 2>/dev/null \
+      | awk '/BEGIN CERTIFICATE/{cert=""} {cert=cert $0 ORS} /END CERTIFICATE/{last=cert} END{printf "%s", last}' > /tmp/repo-maven-ca.pem \
+      && keytool -importcert -noprompt -trustcacerts -alias repo-maven-ca -file /tmp/repo-maven-ca.pem -cacerts -storepass changeit
 
 RUN mvn -B package --file pom.xml
 
