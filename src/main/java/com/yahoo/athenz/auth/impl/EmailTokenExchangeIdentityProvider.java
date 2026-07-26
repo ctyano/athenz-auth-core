@@ -9,6 +9,16 @@ import java.util.Locale;
 
 public class EmailTokenExchangeIdentityProvider implements TokenExchangeIdentityProvider {
 
+    public static final String ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN =
+            "athenz.auth.token_exchange.email.domain";
+    public static final String DEFAULT_EXTERNAL_DOMAIN = "email";
+
+    private final String externalDomain;
+
+    public EmailTokenExchangeIdentityProvider() {
+        externalDomain = resolveExternalDomain();
+    }
+
     @Override
     public String getTokenIdentity(final OAuth2Token token) {
         if (token == null) {
@@ -20,7 +30,7 @@ public class EmailTokenExchangeIdentityProvider implements TokenExchangeIdentity
         }
 
         final String email = emailClaim.toString().trim().toLowerCase(Locale.ROOT);
-        return email.isEmpty() ? null : "email:ext." + email;
+        return email.isEmpty() ? null : externalDomain + ":ext." + email;
     }
 
     @Override
@@ -31,5 +41,17 @@ public class EmailTokenExchangeIdentityProvider implements TokenExchangeIdentity
     @Override
     public List<String> getTokenExchangeClaims() {
         return Collections.singletonList("email");
+    }
+
+    String getExternalDomain() {
+        return externalDomain;
+    }
+
+    static String resolveExternalDomain() {
+        final String configuredDomain = System.getProperty(ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN);
+        if (configuredDomain == null || configuredDomain.trim().isEmpty()) {
+            return DEFAULT_EXTERNAL_DOMAIN;
+        }
+        return configuredDomain.trim().toLowerCase(Locale.ROOT);
     }
 }
