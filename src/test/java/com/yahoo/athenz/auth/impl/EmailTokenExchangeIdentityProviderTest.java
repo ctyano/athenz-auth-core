@@ -15,6 +15,7 @@ public class EmailTokenExchangeIdentityProviderTest {
     @AfterMethod
     public void cleanup() {
         System.clearProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN);
+        System.clearProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_CLAIM);
     }
 
     @Test
@@ -38,8 +39,31 @@ public class EmailTokenExchangeIdentityProviderTest {
     }
 
     @Test
+    public void testGetTokenIdentityMapsConfiguredEmailClaim() {
+        System.setProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_CLAIM,
+                " preferred_username ");
+        OAuth2Token token = new TestOAuth2Token("audience", Map.of(
+                "email", "ignored@athenz.io",
+                "preferred_username", " Athenz_User@ATHENZ.IO "));
+
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getTokenIdentity(token), "email:ext.athenz_user@athenz.io");
+    }
+
+    @Test
     public void testGetTokenIdentityUsesDefaultDomainWithBlankConfiguredDomain() {
         System.setProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_DOMAIN, "  ");
+        OAuth2Token token = new TestOAuth2Token("audience", Map.of("email", "athenz_user@athenz.io"));
+
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getTokenIdentity(token), "email:ext.athenz_user@athenz.io");
+    }
+
+    @Test
+    public void testGetTokenIdentityUsesDefaultClaimWithBlankConfiguredClaim() {
+        System.setProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_CLAIM, "  ");
         OAuth2Token token = new TestOAuth2Token("audience", Map.of("email", "athenz_user@athenz.io"));
 
         EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
@@ -96,10 +120,27 @@ public class EmailTokenExchangeIdentityProviderTest {
     }
 
     @Test
+    public void testGetTokenExchangeClaimsReturnsConfiguredEmailClaim() {
+        System.setProperty(EmailTokenExchangeIdentityProvider.ATHENZ_PROP_TOKEN_EXCHANGE_EMAIL_CLAIM,
+                "preferred_username");
+
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getTokenExchangeClaims(), Collections.singletonList("preferred_username"));
+    }
+
+    @Test
     public void testGetExternalDomainReturnsDefaultDomain() {
         EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
 
         assertEquals(provider.getExternalDomain(), "email");
+    }
+
+    @Test
+    public void testGetEmailClaimNameReturnsDefaultClaim() {
+        EmailTokenExchangeIdentityProvider provider = new EmailTokenExchangeIdentityProvider();
+
+        assertEquals(provider.getEmailClaimName(), "email");
     }
 
     private static class TestOAuth2Token extends OAuth2Token {
