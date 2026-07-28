@@ -62,13 +62,14 @@ When JWT `email` claim values are registered as Athenz role members, configure `
 
 ### EmailTokenExchangeIdentityProvider
 
-Configure ZTS OAuth provider entries with `com.yahoo.athenz.auth.impl.EmailTokenExchangeIdentityProvider` to map an external token `email` claim to an Athenz external principal.
+Configure ZTS OAuth provider entries with `com.yahoo.athenz.auth.impl.EmailTokenExchangeIdentityProvider` to map an external token email claim to an Athenz external principal.
 
-By default, `athenz_user@example.com` maps to `email:ext.athenz_user@example.com`. Set `athenz.auth.token_exchange.email.domain` to use a different external member domain, such as `keycloak:ext.athenz_user@example.com`.
+By default, the `email` claim value `athenz_user@example.com` maps to `email:ext.athenz_user@example.com`. Set `athenz.auth.token_exchange.email.domain` to use a different external member domain, such as `keycloak:ext.athenz_user@example.com`. Set `athenz.auth.token_exchange.email.claim` to read the email address from a different token claim.
 
 | Property | Default | Description |
 | --- | --- | --- |
-| athenz.auth.token_exchange.email.domain | email | Athenz external member domain prefix used when converting the token `email` claim to `<domain>:ext.<email>`. |
+| athenz.auth.token_exchange.email.claim | email | Token claim name used as the email address source. |
+| athenz.auth.token_exchange.email.domain | email | Athenz external member domain prefix used when converting the configured email claim value to `<domain>:ext.<email>`. |
 
 ### UserCertificateProvider
 
