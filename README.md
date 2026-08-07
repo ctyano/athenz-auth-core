@@ -85,6 +85,21 @@ By default, the `email` claim value `athenz_user@example.com` maps to `email:ext
 
 The UserCertificateProvider expects the attestation data to contain the JWT access token issued by the IdP. It validates the token signature with the configured JWKS, checks the expected audience, rejects tokens older than the configured number of minutes based on the `iat` claim, and compares the configured user name claim with the requested Athenz principal.
 
+### ExternalMemberCertificateProvider
+
+| Property | Default | Description |
+| --- | --- | --- |
+| athenz.zts.external_member_cert.idp_config_endpoint | | OIDC discovery endpoint for the IdP |
+| athenz.zts.external_member_cert.idp_jwks_endpoint | | OIDC JWKS endpoint for the IdP |
+| athenz.zts.external_member_cert.idp_audience | | Expected audience for the JWT access token |
+| athenz.zts.external_member_cert.member_name_claim | email | Claim name for the external member name |
+| athenz.zts.external_member_cert.member_domain | email | Athenz external member domain prefix used when converting the configured claim value to `<domain>:ext.<value>` |
+| athenz.zts.external_member_cert.token_expiry_minutes | 15 | Maximum allowed age of the attestation JWT in minutes, evaluated from the `iat` claim |
+| athenz.zts.external_member_cert.connect_timeout | 5000 | Connection timeout in milliseconds |
+| athenz.zts.external_member_cert.read_timeout | 5000 | Read timeout in milliseconds |
+
+The ExternalMemberCertificateProvider expects the attestation data to contain the JWT access token issued by the IdP. It validates the token signature with the configured JWKS, checks the expected audience, rejects tokens older than the configured number of minutes based on the `iat` claim, and compares the configured member name claim with the requested Athenz external member principal (e.g., `email:ext.user@example.com`).
+
 ### VaultCertSigner / VaultCertSignerFactory
 
 `VaultCertSignerFactory` creates a `VaultCertSigner` that requests certificate issuance from [Hashicorp Vault PKI Secret Engine](https://developer.hashicorp.com/vault/docs/secrets/pki).
